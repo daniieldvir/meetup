@@ -1,32 +1,29 @@
-import MeetupList from '../components/meetups/MeetupList';
+import { MongoClient } from 'mongodb';
 
-const DUMMY_MEETUPS = [
-  {
-    id: 'm1',
-    title: 'title1',
-    image:
-      'https://lp-cms-production.imgix.net/2019-06/8ec64b64e1d0805b1101f6c70c7f5b31-tel-aviv.jpg',
-    address: 'address',
-    description: 'description',
-  },
-  {
-    id: 'm2',
-    title: 'title2',
-    image:
-      'https://lp-cms-production.imgix.net/2019-06/8ec64b64e1d0805b1101f6c70c7f5b31-tel-aviv.jpg',
-    address: 'address',
-    description: 'description',
-  },
-];
+import MeetupList from '../components/meetups/MeetupList';
 
 function HomePage(props) {
   return <MeetupList meetups={props.meetups} />;
 }
 
 export async function getStaticProps() {
+  const client = await MongoClient.connect(
+    'mongodb+srv://Daniiel:Qwer24061989@cluster0.7dk6esy.mongodb.net/meetups?retryWrites=true&w=majority'
+  );
+  const db = client.db();
+  const meetupsCollection = db.collection('meetups');
+
+  const meetups = await meetupsCollection.find().toArray();
+  client.close();
+
   return {
     props: {
-      meetups: DUMMY_MEETUPS,
+      meetups: meetups.map((meetup) => ({
+        title: meetup.title,
+        image: meetup.image,
+        address: meetup.address,
+        id: meetup._id.toString(),
+      })),
     },
     revalidate: 1,
   };
