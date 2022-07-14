@@ -1,5 +1,4 @@
 import { MongoClient } from 'mongodb';
-
 import MeetupList from '../components/meetups/MeetupList';
 
 function HomePage(props) {
@@ -12,7 +11,6 @@ export async function getStaticProps() {
   );
   const db = client.db();
   const meetupsCollection = db.collection('meetups');
-
   const meetups = await meetupsCollection.find().toArray();
   client.close();
 

@@ -1,45 +1,55 @@
+import { MongoClient, ObjectId } from 'mongodb';
+
 import MeetupDetail from '../../components/meetups/MeetupDetail';
 
-function MeetupDetails() {
+function MeetupDetails(props) {
   return (
     <MeetupDetail
-      image="https://lp-cms-production.imgix.net/2019-06/8ec64b64e1d0805b1101f6c70c7f5b31-tel-aviv.jpg"
-      title="title"
-      address="address"
-      description="description"></MeetupDetail>
+      image={props.meetupData.image}
+      title={props.meetupData.title}
+      address={props.meetupData.address}
+      description={props.meetupData.description}></MeetupDetail>
   );
 }
 export async function getStaticPaths() {
+  const client = await MongoClient.connect(
+    'mongodb+srv://Daniiel:Qwer24061989@cluster0.7dk6esy.mongodb.net/meetups?retryWrites=true&w=majority'
+  );
+  const db = client.db();
+  const meetupsCollection = db.collection('meetups');
+  const meetups = await meetupsCollection.find({}, { _id: 1 }).toArray();
+  client.close();
+
   return {
     fallback: false,
-    paths: [
-      {
-        params: {
-          meetupId: 'm1',
-        },
-      },
-      {
-        params: {
-          meetupId: 'm2',
-        },
-      },
-    ],
+    paths: meetups.map((meetup) => ({
+      params: { meetupId: meetup._id.toString() },
+    })),
   };
 }
 
 export async function getStaticProps(context) {
   const meetupId = context.params.meetupId;
 
-  console.log('meetupId', meetupId);
+  const client = await MongoClient.connect(
+    'mongodb+srv://Daniiel:Qwer24061989@cluster0.7dk6esy.mongodb.net/meetups?retryWrites=true&w=majority'
+  );
+  const db = client.db();
+  const meetupsCollection = db.collection('meetups');
+
+  const selectedMeetup = await meetupsCollection.findOne({
+    _id: ObjectId(meetupId),
+  });
+  client.close();
 
   return {
     props: {
       meetupData: {
-        image:
-          'https://lp-cms-production.imgix.net/2019-06/8ec64b64e1d0805b1101f6c70c7f5b31-tel-aviv.jpg',
-        title: 'title',
-        address: 'address',
-        description: 'description',
+        id: selectedMeetup._id.toString(),
+        title: selectedMeetup.title,
+        address: selectedMeetup.address,
+        image: selectedMeetup.image,
+        description: selectedMeetup.description,
       },
     },
     revalidate: 1,
